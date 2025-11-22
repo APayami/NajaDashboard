@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>داشبورد پلیس - نقشه حرارتی جرایم و مسیرهای گشت</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <h1>داشبورد پیش‌بینی جرایم پلیس</h1>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-label">نقاط ریسک پیش‌بینی شده</span>
+                    <span class="stat-value" id="totalIncidents">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">گشت‌های فعال</span>
+                    <span class="stat-value" id="activePatrols">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Right Sidebar - Controls -->
+            <aside class="control-panel">
+                <div class="panel-section">
+                    <h2>فیلترها</h2>
+                    
+                    <!-- Place Filter -->
+                    <div class="filter-group">
+                        <label for="placeFilter">منطقه شهرداری</label>
+                        <select id="placeFilter" class="filter-input">
+                            <option value="all">همه مناطق</option>
+                            <option value="downtown">منطقه ۱۲ (مرکز شهر)</option>
+                            <option value="north">منطقه ۱ (شمال)</option>
+                            <option value="south">منطقه ۲۰ (جنوب)</option>
+                            <option value="east">منطقه ۸ (شرق)</option>
+                            <option value="west">منطقه ۹ (غرب)</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Filter -->
+                    <div class="filter-group">
+                        <label for="selectedDate">تاریخ پیش‌بینی (شمسی)</label>
+                        <input type="text" id="selectedDate" class="filter-input" placeholder="1404-08-30" value="1404-08-30" pattern="\d{4}-\d{2}-\d{2}" autocomplete="off">
+                    </div>
+
+                    <!-- Crime Type Filter -->
+                    <div class="filter-group">
+                        <label for="crimeTypeFilter">نوع جرم</label>
+                        <select id="crimeTypeFilter" class="filter-input">
+                            <option value="all">تمام جرائم</option>
+                            <option value="سرقت">سرقت</option>
+                            <option value="نزاع و درگیری">نزاع و درگیری</option>
+                            <option value="زورگیری">زورگیری</option>
+                        </select>
+                    </div>
+
+                    <!-- Time of Day Filter -->
+                    <div class="filter-group">
+                        <label for="timeOfDayFilter">ساعت روز</label>
+                        <select id="timeOfDayFilter" class="filter-input">
+                            <option value="all">همه ساعات</option>
+                            <option value="morning">صبح (۶ صبح - ۱۲ ظهر)</option>
+                            <option value="afternoon">ظهر (۱۲ ظهر - ۶ عصر)</option>
+                            <option value="evening">عصر (۶ عصر - ۱۲ شب)</option>
+                            <option value="night">شب (۱۲ شب - ۶ صبح)</option>
+                        </select>
+                    </div>
+
+                    <button id="applyFilters" class="btn-primary">اعمال فیلترها</button>
+                    <button id="resetFilters" class="btn-secondary">بازنشانی</button>
+                </div>
+
+                <!-- Patrol Route Calculator -->
+                <div class="panel-section">
+                    <h2>محاسبه مسیر گشت</h2>
+                    
+                    <div class="filter-group">
+                        <label for="patrolCount">تعداد گشت‌ها</label>
+                        <input type="number" id="patrolCount" class="filter-input" min="1" max="20" value="3">
+                    </div>
+
+                    <button id="calculateRoutes" class="btn-primary">محاسبه مسیرها</button>
+                    <button id="clearRoutes" class="btn-secondary">پاک کردن مسیرها</button>
+
+                    <!-- Route Info -->
+                    <div id="routeInfo" class="route-info" style="display: none;">
+                        <h3>مسیرهای تولید شده</h3>
+                        <div id="routesList"></div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Map Container -->
+            <section class="map-container">
+                <div id="map"></div>
+                
+                <!-- Map Legend -->
+                <div class="map-legend">
+                    <h3>سطح ریسک پیش‌بینی شده</h3>
+                    <div class="legend-gradient"></div>
+                    <div class="legend-labels">
+                        <span>کم</span>
+                        <span>زیاد</span>
+                    </div>
+                    <div id="mapLockNotice" style="display: none; margin-top: 10px; padding: 8px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; font-size: 11px; color: #856404; direction: rtl; text-align: center;">
+                        🔒 نقشه قفل شده - فقط این منطقه قابل مشاهده است
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet Heat Plugin -->
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    
+    <!-- Persian Date library for date conversion -->
+    <script src="https://unpkg.com/persian-date@1.1.0/dist/persian-date.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
+
